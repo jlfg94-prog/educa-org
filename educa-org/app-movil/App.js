@@ -117,19 +117,7 @@ export default function App() {
         </View>
       )}
 
-      {/* Resultados de la IA */}
-      {resultado && (
-        <View style={styles.resultContainer}>
-          <Text style={styles.resultTitle}>{resultado.titulo}</Text>
-          
-          <Text style={styles.sectionTitle}>Justificación Legal</Text>
-          <Text style={styles.resultText}>{resultado.justificacion_legal}</Text>
-          
-          <Text style={styles.sectionTitle}>Desarrollo Paso a Paso</Text>
-          <Text style={styles.resultText}>{resultado.desarrollo}</Text>
-        </View>
-      )}
-      {resultado && (
+    {resultado && (
       <View style={styles.resultContainer}>
         <Text style={styles.resultTitle}>{resultado.titulo}</Text>
 
@@ -139,7 +127,6 @@ export default function App() {
         <Text style={styles.sectionTitle}>Desarrollo Paso a Paso</Text>
         <Text style={styles.resultText}>{resultado.desarrollo}</Text>
 
-        {/* Añade este botón */}
         <TouchableOpacity 
           style={styles.shareButton} 
           onPress={compartirActividad}
