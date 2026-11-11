@@ -3,11 +3,17 @@ import fs from 'fs';
 import path from 'path';
 import * as dotenv from 'dotenv';
 import { GoogleGenerativeAI } from '@google/generative-ai';
+import cors from '@fastify/cors';
 
 // Cargar variables de entorno desde el archivo .env
 dotenv.config();
 
 const fastify = Fastify({ logger: true });
+fastify.register(cors, {
+  origin: '*', 
+  methods: ['POST', 'OPTIONS'],
+  allowedHeaders: ['Content-Type']
+});
 
 // Inicializar el cliente de Gemini
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
