@@ -89,7 +89,7 @@ fastify.post('/generar-actividad', async (request, reply) => {
       "titulo": "",
       "justificacion_legal": "",
       "desarrollo": "",
-      "recurso_imprimible_html": 'Escribe aquí el código HTML básico (<h1>, <p>, <ul>) de una ficha de trabajo para el alumno lista para imprimir, basada en la actividad.'
+      "ficha_html": "Crea el código HTML y CSS completo de una ficha de ejercicios para el alumno basada en esta actividad. Debe tener un diseño atractivo, fondo blanco, un espacio superior punteado para 'Nombre: _______________'. Usa CSS para crear cuadrículas si son matemáticas, o cajas de texto si son preguntas. Usa emojis (ej: 🐊, 🚀, 🍎) como ilustraciones infantiles para decorar la ficha. El HTML debe ser un documento completo."
     }
   `;
 
