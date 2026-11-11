@@ -7,7 +7,8 @@ import {
   TouchableOpacity, 
   ActivityIndicator, 
   ScrollView,
-  Share
+  Share,
+  Platform
 } from 'react-native';
 import * as Print from 'expo-print';
 import * as Sharing from 'expo-sharing';
@@ -71,19 +72,20 @@ export default function App() {
   };
   
   const generarPDF = async () => {
-    // Verificamos que la IA nos haya devuelto el HTML de la ficha
     if (!resultado || !resultado.ficha_html) {
       alert("La IA no ha generado ninguna ficha imprimible para esta actividad.");
       return;
     }
 
     try {
-      // Genera el PDF usando directamente el diseño que se inventó Gemini
-      const { uri } = await Print.printToFileAsync({ html: resultado.ficha_html });
-      
-      // Abre el menú nativo para compartir por WhatsApp, guardar o imprimir
-      await Sharing.shareAsync(uri);
-      
+      if (Platform.OS === 'web') {
+        // En la web (Netlify), abre la ventana de impresión del navegador
+        await Print.printAsync({ html: resultado.ficha_html });
+      } else {
+        // En el móvil nativo (Android), crea el archivo PDF y abre el menú de compartir
+        const { uri } = await Print.printToFileAsync({ html: resultado.ficha_html });
+        await Sharing.shareAsync(uri);
+      }
     } catch (error) {
       console.error("Error al generar PDF:", error);
     }
