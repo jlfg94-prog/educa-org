@@ -79,10 +79,17 @@ const generarPDF = async () => {
 
     try {
       if (Platform.OS === 'web') {
-        // En la web (Netlify), inyecta directamente el diseño HTML que ha creado Gemini en la ventana de impresión
-        await Print.printAsync({ html: resultado.ficha_html });
+        // Abre una pestaña nueva exclusivamente con el diseño HTML de Gemini y lanza su impresión
+        const ventanaImpresion = window.open('', '_blank');
+        ventanaImpresion.document.write(resultado.ficha_html);
+        ventanaImpresion.document.close();
+        ventanaImpresion.focus();
+        setTimeout(() => {
+          ventanaImpresion.print();
+          ventanaImpresion.close();
+        }, 500);
       } else {
-        // En el móvil nativo (Android), crea el PDF físico con el diseño y abre el menú para compartirlo
+        // En Android (cuando Sara use la app instalada), crea el PDF físico y abre WhatsApp/compartir
         const { uri } = await Print.printToFileAsync({ html: resultado.ficha_html });
         await Sharing.shareAsync(uri);
       }
