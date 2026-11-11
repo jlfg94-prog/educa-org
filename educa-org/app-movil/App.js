@@ -9,6 +9,8 @@ import {
   ScrollView,
   Share
 } from 'react-native';
+import * as Print from 'expo-print';
+import * as Sharing from 'expo-sharing';
 
 export default function App() {
   const [curso, setCurso] = useState('');
@@ -67,6 +69,38 @@ export default function App() {
       console.error("Error al compartir:", error.message);
     }
   };
+  
+  const generarPDF = async () => {
+    if (!resultado || !resultado.recurso_imprimible_html) return;
+
+    try {
+      // Le inyectamos un poco de CSS básico para que quede bonito en el folio
+      const htmlCompleto = `
+        <html>
+          <head>
+            <style>
+              body { font-family: 'Helvetica', sans-serif; padding: 40px; color: #333; }
+              h1 { color: #0066cc; text-align: center; }
+              .caja { border: 2px dashed #ccc; padding: 20px; margin-top: 20px; }
+            </style>
+          </head>
+          <body>
+            ${resultado.recurso_imprimible_html}
+          </body>
+        </html>
+      `;
+
+      // Genera el archivo PDF de forma invisible
+      const { uri } = await Print.printToFileAsync({ html: htmlCompleto });
+      
+      // Abre el menú nativo del móvil para guardar, imprimir o enviar el PDF
+      await Sharing.shareAsync(uri);
+      
+    } catch (error) {
+      console.error("Error al generar PDF:", error);
+    }
+  };
+  
   return (
     <ScrollView contentContainerStyle={styles.container}>
       <Text style={styles.header}>Generador de Actividades</Text>
@@ -132,6 +166,12 @@ export default function App() {
           onPress={compartirActividad}
         >
           <Text style={styles.shareButtonText}>Compartir por WhatsApp</Text>
+        </TouchableOpacity>
+        <TouchableOpacity 
+          style={[styles.shareButton, { backgroundColor: '#d32f2f', marginTop: 10 }]} 
+          onPress={generarPDF}
+        >
+          <Text style={styles.shareButtonText}>Descargar Ficha en PDF</Text>
         </TouchableOpacity>
       </View>
     )}
