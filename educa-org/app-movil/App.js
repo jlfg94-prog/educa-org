@@ -71,29 +71,17 @@ export default function App() {
   };
   
   const generarPDF = async () => {
-    if (!resultado || !resultado.recurso_imprimible_html) return;
+    // Verificamos que la IA nos haya devuelto el HTML de la ficha
+    if (!resultado || !resultado.ficha_html) {
+      alert("La IA no ha generado ninguna ficha imprimible para esta actividad.");
+      return;
+    }
 
     try {
-      // Le inyectamos un poco de CSS básico para que quede bonito en el folio
-      const htmlCompleto = `
-        <html>
-          <head>
-            <style>
-              body { font-family: 'Helvetica', sans-serif; padding: 40px; color: #333; }
-              h1 { color: #0066cc; text-align: center; }
-              .caja { border: 2px dashed #ccc; padding: 20px; margin-top: 20px; }
-            </style>
-          </head>
-          <body>
-            ${resultado.recurso_imprimible_html}
-          </body>
-        </html>
-      `;
-
-      // Genera el archivo PDF de forma invisible
-      const { uri } = await Print.printToFileAsync({ html: htmlCompleto });
+      // Genera el PDF usando directamente el diseño que se inventó Gemini
+      const { uri } = await Print.printToFileAsync({ html: resultado.ficha_html });
       
-      // Abre el menú nativo del móvil para guardar, imprimir o enviar el PDF
+      // Abre el menú nativo para compartir por WhatsApp, guardar o imprimir
       await Sharing.shareAsync(uri);
       
     } catch (error) {
