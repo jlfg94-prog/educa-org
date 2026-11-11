@@ -170,6 +170,13 @@ const generarPDF = async () => {
         >
           <Text style={styles.shareButtonText}>Descargar Ficha en PDF</Text>
         </TouchableOpacity>
+        <TouchableOpacity 
+          style={styles.anotherButton} 
+          onPress={generarActividad}
+          disabled={loading}
+        >
+          <Text style={styles.anotherButtonText}>🔄 Generar otra variante</Text>
+        </TouchableOpacity>
       </View>
     )}
     </ScrollView>
@@ -190,6 +197,18 @@ const styles = StyleSheet.create({
     marginBottom: 24,
     color: '#333',
     textAlign: 'center',
+  },
+  anotherButton: {
+    backgroundColor: '#6c757d', // Un tono gris elegante
+    padding: 14,
+    borderRadius: 8,
+    alignItems: 'center',
+    marginTop: 10,
+  },
+  anotherButtonText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: 'bold',
   },
   form: {
     backgroundColor: '#fff',
