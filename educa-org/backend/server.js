@@ -17,29 +17,24 @@ fastify.register(cors, {
 
 // Inicializar el cliente de Gemini
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
-const model = genAI.getGenerativeModel({ 
-  model: "gemini-flash-latest",
-  generationConfig: {
-    responseMimeType: "application/json"
-  }
-});
 
 // 1. Cargar la ley y dividirla en trozos (párrafos)
 const leyCompleta = fs.readFileSync(
   path.join(process.cwd(), 'assets', 'lomloe_andalucia.txt'),
   'utf-8'
 );
-// Dividimos el texto cada vez que haya un doble salto de línea
 const fragmentosLey = leyCompleta.split(/\n+/);
 
 fastify.post('/generar-actividad', async (request, reply) => {
   const { curso, asignatura, tema, detalles } = request.body;
 
-  // 2. Crear las palabras clave a buscar (ej: "primaria", "matemáticas", "fracciones")
-  const terminosBusqueda = `${curso} ${asignatura} ${tema} ${detalles}`
+  console.log("📥 Datos recibidos del frontend:", { curso, asignatura, tema, detalles });
+
+  // 2. Crear las palabras clave a buscar (SIN 'detalles' para no ensuciar la búsqueda legal)
+  const terminosBusqueda = `${curso} ${asignatura} ${tema}`
     .toLowerCase()
     .split(" ")
-    .filter(palabra => palabra.length > 3); // Ignoramos "de", "el", "la"...
+    .filter(palabra => palabra.length > 3);
 
   // 3. Puntuar cada párrafo según cuántas palabras clave contenga
   const fragmentosRelevantes = fragmentosLey.map(fragmento => {
@@ -58,24 +53,17 @@ fastify.post('/generar-actividad', async (request, reply) => {
   .map(f => f.texto)
   .join('\n\n...\n\n');
 
-  // Si el buscador falla, enviamos algo por defecto en lugar de vacío
   const contextoLegal = fragmentosRelevantes.length > 0 
     ? fragmentosRelevantes 
     : fragmentosLey.slice(0, 5).join('\n\n');
 
-  console.log("➡️ Términos buscados:", terminosBusqueda);
-  console.log("➡️ Líneas filtradas enviadas a Gemini:", contextoLegal.length > 500 ? "Demasiado largo!" : "Tamaño correcto");
-  console.log("➡️ Tamaño del contexto en caracteres:", contextoLegal.length);
-  
-  const instruccionesExtra = detalles 
-  ? `REQUISITO ESPECÍFICO DEL DOCENTE PARA LA FICHA/ACTIVIDAD/EXAMEN: "${detalles}". Respeta estrictamente este formato o cantidad de ejercicios.` 
-  : `Incluye entre 4 y 6 ejercicios prácticos variados.`;
-  // 4. Construimos el prompt inyectando SOLO el contexto filtrado
+  const requisitoDocente = detalles && detalles.trim() !== ""
+    ? detalles.trim()
+    : "Incluye entre 4 y 6 ejercicios prácticos variados sobre el tema.";
+
+  // 4. Construimos el prompt reforzando el requisito dentro del propio campo ficha_html
   const prompt = `
     Eres un experto pedagogo. Diseña una actividad educativa en formato JSON puro.
-    Genera una actividad para Curso: ${curso}, Asignatura: ${asignatura}, Tema: ${tema}.
-    
-    ${instruccionesExtra}
     
     <CONTEXTO_LEGAL>
     ${contextoLegal}
@@ -85,27 +73,57 @@ fastify.post('/generar-actividad', async (request, reply) => {
     Curso: ${curso}
     Asignatura: ${asignatura}
     Tema: ${tema}
+    Formato/Requisitos exigidos por el docente: ${requisitoDocente}
     </PARÁMETROS>
     
-    Instrucciones:
+    Instrucciones obligatorias:
     1. La actividad debe durar 45 minutos.
     2. Justifica legalmente la actividad basándote SOLO en el <CONTEXTO_LEGAL>.
-    3. Devuelve estrictamente un JSON con esta estructura, sin bloques de código Markdown:
+    3. En la ficha imprimible ("ficha_html"), CUMPLE ESTRICTAMENTE lo pedido en "Formato/Requisitos exigidos por el docente": "${requisitoDocente}". Si pide una lectura comprensiva, redacta el texto completo de lectura y sus preguntas; si pide un examen o un número exacto de actividades, incluye exactamente esa cantidad y formato.
+    4. Devuelve estrictamente un JSON con esta estructura, sin bloques de código Markdown:
     {
       "titulo": "",
       "justificacion_legal": "",
       "desarrollo": "",
-      "ficha_html": "Crea el código HTML y CSS completo de una ficha de ejercicios para el alumno basada en esta actividad. Debe tener un diseño atractivo, fondo blanco, un espacio superior punteado para 'Nombre: _______________'. Usa CSS para crear cuadrículas si son matemáticas, o cajas de texto si son preguntas. Usa emojis (ej: 🐊, 🚀, 🍎) como ilustraciones infantiles para decorar la ficha. El HTML debe ser un documento completo."
+      "ficha_html": "Documento HTML5 completo con CSS en etiqueta <style> listo para imprimir en A4 (fondo blanco, cabecera con Nombre y Fecha). DEBE CONTENER OBLIGATORIAMENTE: ${requisitoDocente}. Usa CSS limpio para cuadrículas, textos de lectura o cajas de respuesta, y decora con emojis infantiles."
     }
   `;
 
   try {
-    console.log("➡️ Enviando petición a Gemini...");
-    const result = await model.generateContent(prompt);
+    const MODELOS_DISPONIBLES = [
+      "gemini-2.5-flash-lite",
+      "gemini-2.5-flash",
+      "gemini-1.5-flash"
+    ];
 
-    console.log("✅ Respuesta de Gemini recibida.");
+    let result = null;
+    let ultimoError = null;
+
+    for (const nombreModelo of MODELOS_DISPONIBLES) {
+      try {
+        console.log(`➡️ Probando petición con el modelo: ${nombreModelo}...`);
+        const model = genAI.getGenerativeModel({ 
+          model: nombreModelo,
+          generationConfig: {
+            responseMimeType: "application/json",
+            temperature: 0.7
+          }
+        });
+
+        result = await model.generateContent(prompt);
+        console.log(`✅ Respuesta obtenida con éxito de ${nombreModelo}`);
+        break;
+      } catch (err) {
+        console.warn(`⚠️ Falló ${nombreModelo} (${err.status || err.message}). Saltando al siguiente...`);
+        ultimoError = err;
+      }
+    }
+
+    if (!result) {
+      throw ultimoError;
+    }
+
     const responseText = result.response.text();
-    console.log("➡️ Texto crudo devuelto:", responseText);
 
     // Limpieza segura
     const cleanJson = responseText.replace(/```json/g, '').replace(/```/g, '').trim();
@@ -116,7 +134,7 @@ fastify.post('/generar-actividad', async (request, reply) => {
 
   } catch (error) {
     console.log("❌ ERROR CRÍTICO CAPTURADO:");
-    console.error(error); // Imprimimos el error exacto en rojo
+    console.error(error);
     return reply.status(500).send({ error: 'Error interno: ' + error.message });
   }
 });
