@@ -88,7 +88,8 @@ fastify.post('/generar-actividad', async (request, reply) => {
     {
       "titulo": "",
       "justificacion_legal": "",
-      "desarrollo": ""
+      "desarrollo": "",
+      "recurso_imprimible_html": 'Escribe aquí el código HTML básico (<h1>, <p>, <ul>) de una ficha de trabajo para el alumno lista para imprimir, basada en la actividad.'
     }
   `;
 
