@@ -31,14 +31,12 @@ export default function App() {
     setResultado(null);
 
     try {
-        // ⚠️ IMPORTANTE: Si pruebas en un móvil físico, cambia "localhost" por 
-        // la IP local de tu ordenador (ej. http://192.168.1.33:3000)
-          const response = await fetch('http://192.168.1.135:3000/generar-actividad', {
-          method: 'POST',
-          headers: {
-              'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({ curso, asignatura, tema }),
+          const response = await fetch('https://educa-org.onrender.com/generar-actividad', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ curso, asignatura, tema }),
           });
 
         if (!response.ok) {
