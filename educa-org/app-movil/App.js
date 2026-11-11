@@ -71,18 +71,18 @@ export default function App() {
     }
   };
   
-  const generarPDF = async () => {
+const generarPDF = async () => {
     if (!resultado || !resultado.ficha_html) {
-      alert("La IA no ha generado ninguna ficha imprimible para esta actividad.");
+      alert("La ficha aún no está lista. Genera una actividad nueva.");
       return;
     }
 
     try {
       if (Platform.OS === 'web') {
-        // En la web (Netlify), abre la ventana de impresión del navegador
+        // En la web (Netlify), inyecta directamente el diseño HTML que ha creado Gemini en la ventana de impresión
         await Print.printAsync({ html: resultado.ficha_html });
       } else {
-        // En el móvil nativo (Android), crea el archivo PDF y abre el menú de compartir
+        // En el móvil nativo (Android), crea el PDF físico con el diseño y abre el menú para compartirlo
         const { uri } = await Print.printToFileAsync({ html: resultado.ficha_html });
         await Sharing.shareAsync(uri);
       }
