@@ -33,10 +33,10 @@ const leyCompleta = fs.readFileSync(
 const fragmentosLey = leyCompleta.split(/\n+/);
 
 fastify.post('/generar-actividad', async (request, reply) => {
-  const { curso, asignatura, tema } = request.body;
+  const { curso, asignatura, tema, detalles } = request.body;
 
   // 2. Crear las palabras clave a buscar (ej: "primaria", "matemáticas", "fracciones")
-  const terminosBusqueda = `${curso} ${asignatura} ${tema}`
+  const terminosBusqueda = `${curso} ${asignatura} ${tema} ${detalles}`
     .toLowerCase()
     .split(" ")
     .filter(palabra => palabra.length > 3); // Ignoramos "de", "el", "la"...
@@ -67,9 +67,15 @@ fastify.post('/generar-actividad', async (request, reply) => {
   console.log("➡️ Líneas filtradas enviadas a Gemini:", contextoLegal.length > 500 ? "Demasiado largo!" : "Tamaño correcto");
   console.log("➡️ Tamaño del contexto en caracteres:", contextoLegal.length);
   
+  const instruccionesExtra = detalles 
+  ? `REQUISITO ESPECÍFICO DEL DOCENTE PARA LA FICHA/ACTIVIDAD/EXAMEN: "${detalles}". Respeta estrictamente este formato o cantidad de ejercicios.` 
+  : `Incluye entre 4 y 6 ejercicios prácticos variados.`;
   // 4. Construimos el prompt inyectando SOLO el contexto filtrado
   const prompt = `
     Eres un experto pedagogo. Diseña una actividad educativa en formato JSON puro.
+    Genera una actividad para Curso: ${curso}, Asignatura: ${asignatura}, Tema: ${tema}.
+    
+    ${instruccionesExtra}
     
     <CONTEXTO_LEGAL>
     ${contextoLegal}
