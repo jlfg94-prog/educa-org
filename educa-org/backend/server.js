@@ -91,9 +91,12 @@ fastify.post('/generar-actividad', async (request, reply) => {
 
   try {
     const MODELOS_DISPONIBLES = [
-      "gemini-2.5-flash-lite",
-      "gemini-2.5-flash",
-      "gemini-1.5-flash"
+      "gemini-flash-lite-latest",
+      "gemini-3.8-flash-lite",
+      "gemini-3.0-flash",
+      "gemini-2.0-flash",
+      "gemini-flash-latest",
+      "gemini-pro-latest"
     ];
 
     let result = null;
