@@ -17,6 +17,7 @@ export default function App() {
   const [curso, setCurso] = useState('');
   const [asignatura, setAsignatura] = useState('');
   const [tema, setTema] = useState('');
+  const [detalles, setDetalles] = useState('');
   
   const [loading, setLoading] = useState(false);
   const [resultado, setResultado] = useState(null);
@@ -24,7 +25,7 @@ export default function App() {
 
   const generarActividad = async () => {
     // Validación básica
-    if (!curso || !asignatura || !tema) {
+    if (!curso || !asignatura || !tema || !detalles) {
       setError('Por favor, rellena todos los campos.');
       return;
     }
@@ -39,7 +40,7 @@ export default function App() {
             headers: {
                 'Content-Type': 'application/json',
             },
-            body: JSON.stringify({ curso, asignatura, tema }),
+            body: JSON.stringify({ curso, asignatura, tema, detalles }),
           });
 
         if (!response.ok) {
@@ -126,6 +127,15 @@ const generarPDF = async () => {
           value={tema} 
           onChangeText={setTema} 
         />
+
+        <Text style={styles.label}>Formato o detalles de la ficha (Opcional):</Text>
+        <TextInput
+          style={styles.input}
+          placeholder="Ej: Lectura comprensiva, Examen de 5 preguntas, 8 sumas..."
+          value={detalles}
+          onChangeText={setDetalles}
+        />
+        
 
         <TouchableOpacity 
           style={styles.button} 
